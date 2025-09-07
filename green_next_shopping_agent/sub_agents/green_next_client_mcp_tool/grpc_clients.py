@@ -3,13 +3,13 @@ from __future__ import annotations
 import grpc
 from typing import Optional
 
-from . import demo_pb2, demo_pb2_grpc
+import demo_pb2, demo_pb2_grpc
 
 
 class ProductCatalogClient:
     def __init__(self, target: str = "localhost:3550", channel: Optional[grpc.Channel] = None) -> None:
         self._own_channel = channel is None
-        self._channel = channel or grpc.insecure_channel(q1)
+        self._channel = channel or grpc.insecure_channel(target)
         self._stub = demo_pb2_grpc.ProductCatalogServiceStub(self._channel)
 
     def search_products(self, query: str) -> demo_pb2.SearchProductsResponse:
