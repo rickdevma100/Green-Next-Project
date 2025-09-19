@@ -1,0 +1,199 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: green-next-shopping-agent
+  labels:
+    app: green-next-shopping-agent
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: green-next-shopping-agent
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: green-next-shopping-agent
+        version: v1
+    spec:
+      containers:
+      - name: green-next-agent
+        image: gcr.io/YOUR_PROJECT_ID/green-next-shopping-agent:latest
+        ports:
+        - containerPort: 8080
+          name: adk-web
+        env:
+        # Microservice endpoints
+        - name: PRODUCT_CATALOG_SERVICE
+          value: "productcatalogservice.default.svc.cluster.local:3550"
+        - name: CART_SERVICE
+          value: "cartservice.default.svc.cluster.local:7070"
+        - name: CHECKOUT_SERVICE
+          value: "checkoutservice.default.svc.cluster.local:5050"
+        - name: PAYMENT_SERVICE
+          value: "paymentservice.default.svc.cluster.local:50051"
+        - name: FRONTEND_SERVICE
+          value: "frontend.default.svc.cluster.local:80"
+        - name: ADK_WEB_HOST
+          value: "0.0.0.0"
+        - name: ADK_WEB_PORT
+          value: "8080"
+        # API Keys
+        - name: GEMINI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: gemini-api-secret
+              key: api-key
+        # Application settings
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: GRPC_POLL_STRATEGY
+          value: "epoll"
+        # MCP server stability
+        - name: MCP_SERVER_TIMEOUT
+          value: "30"
+        - name: ANYIO_BACKEND
+          value: "asyncio"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "400m"
+        livenessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        # Optional: Mount volume for image storage
+        volumeMounts:
+        - name: image-storage
+          mountPath: /app/images/downloaded
+      volumes:
+      - name: image-storage
+        emptyDir: {}
+      # Security context for non-root user
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      # Restart policy
+      restartPolicy: Always
+---
+# External LoadBalancer Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: green-next-shopping-agent
+  labels:
+    app: green-next-shopping-agent
+  annotations:
+    # GKE Load Balancer annotations
+    cloud.google.com/load-balancer-type: "External"
+    service.beta.kubernetes.io/gke-load-balancer-type: "External"
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: green-next-shopping-agent
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
+---
+# HorizontalPodAutoscaler for scaling
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: green-next-shopping-agent-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: green-next-shopping-agent
+  minReplicas: 1
+  maxReplicas: 1
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+---
+# NetworkPolicy for security (optional) - Simplified for microservices communication
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: green-next-shopping-agent-netpol
+spec:
+  podSelector:
+    matchLabels:
+      app: green-next-shopping-agent
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Allow incoming traffic on port 8080
+  - from: []
+    ports:
+    - protocol: TCP
+      port: 8080
+  egress:
+  # Allow all egress traffic within the cluster (for microservice communication)
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 3550  # productcatalogservice
+    - protocol: TCP
+      port: 7070  # cartservice  
+    - protocol: TCP
+      port: 5050  # checkoutservice
+    - protocol: TCP
+      port: 50051 # paymentservice
+    - protocol: TCP
+      port: 80    # frontend
+  # Allow DNS resolution
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+  # Allow HTTPS for external APIs (Gemini)
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443
+---
+# Secret for Gemini API Key (create this separately)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gemini-api-secret
+type: Opaque
+stringData:
+  api-key: "AIzaSyCIIoEbK6dHFVAyvEnUtq_LUWXlUJBwF_A"

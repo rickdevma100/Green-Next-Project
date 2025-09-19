@@ -1,0 +1,66 @@
+# Ultra-lightweight Alpine Linux image (~50MB)
+FROM python:3.11-alpine3.18
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    GRPC_POLL_STRATEGY=epoll \
+    GRPC_VERBOSITY=INFO \
+    ADK_WEB_HOST=0.0.0.0 \
+    ADK_WEB_PORT=8080
+
+# Set working directory
+WORKDIR /app
+
+# Install build dependencies for gRPC (Alpine uses musl libc)
+RUN apk add --no-cache \
+    build-base \
+    linux-headers \
+    curl \
+    git \
+    pkgconfig \
+    && rm -rf /var/cache/apk/*
+
+# Copy requirements first for better caching
+COPY requirements.txt /app/
+
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir \
+    grpcio==1.66.2 \
+    grpcio-tools==1.66.2 \
+    protobuf==5.29.5 \
+    mypy-protobuf==3.6.0 \
+    -r requirements.txt
+
+# Copy protobuf definition and generate files
+COPY demo.proto /app/
+RUN mkdir -p /app/green_next_shopping_agent/sub_agents/mcp_server && \
+    python -m grpc_tools.protoc \
+    --proto_path=. \
+    --python_out=./green_next_shopping_agent/sub_agents/mcp_server \
+    --grpc_python_out=./green_next_shopping_agent/sub_agents/mcp_server \
+    --mypy_out=./green_next_shopping_agent/sub_agents/mcp_server \
+    demo.proto
+
+# Copy application code
+COPY green_next_shopping_agent/ /app/green_next_shopping_agent/
+COPY readme.md /app/
+
+# Set Python path
+ENV PYTHONPATH="/app:$PYTHONPATH"
+
+# Create non-root user
+RUN addgroup -g 1000 appuser && adduser -u 1000 -G appuser -s /bin/sh -D appuser
+RUN chown -R appuser:appuser /app
+USER appuser
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# Expose port
+EXPOSE 8080
+
+# Start application
+CMD ["adk", "web", "--host", "0.0.0.0", "--port", "8080", "green_next_shopping_agent.agent:root_agent"]
