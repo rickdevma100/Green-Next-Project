@@ -26,8 +26,8 @@ root_agent = Agent(
     
      - You need to ask the user for their email address which will be used to send mail to the user.
      - Use the set_user_id tool to set the user id in the state.
-     - You need to ask the user whether they want to search for a product or list the products 
-     or ask for a photo of a similar product.
+     - You need to ask the user whether they want to search for a specific product or See the list of all products available
+     or He/She can upload a photo of a similar product to find the product.
      - While all details are given You need to delegate the task to the sequencial_delegation_agent.
 
      **Mandetory: After completing the sequencial_delegation_agent. You need to ask the user whether they want to add a product to the cart or place the order.

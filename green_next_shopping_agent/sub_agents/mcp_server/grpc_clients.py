@@ -7,7 +7,7 @@ import demo_pb2, demo_pb2_grpc
 
 
 class ProductCatalogClient:
-    def __init__(self, target: str = "localhost:3550", channel: Optional[grpc.Channel] = None) -> None:
+    def __init__(self, target: str = "productcatalogservice:3550", channel: Optional[grpc.Channel] = None) -> None:
         self._own_channel = channel is None
         self._channel = channel or grpc.insecure_channel(target)
         self._stub = demo_pb2_grpc.ProductCatalogServiceStub(self._channel)
@@ -26,7 +26,7 @@ class ProductCatalogClient:
 
 
 class CartClient:
-    def __init__(self, target: str = "localhost:7070", channel: Optional[grpc.Channel] = None) -> None:
+    def __init__(self, target: str = "cartservice:7070", channel: Optional[grpc.Channel] = None) -> None:
         self._own_channel = channel is None
         self._channel = channel or grpc.insecure_channel(target)
         self._stub = demo_pb2_grpc.CartServiceStub(self._channel)
@@ -41,7 +41,7 @@ class CartClient:
 
 
 class CheckoutClient:
-    def __init__(self, target: str = "localhost:5050", channel: Optional[grpc.Channel] = None) -> None:
+    def __init__(self, target: str = "checkoutservice:5050", channel: Optional[grpc.Channel] = None) -> None:
         self._own_channel = channel is None
         self._channel = channel or grpc.insecure_channel(target)
         self._stub = demo_pb2_grpc.CheckoutServiceStub(self._channel)

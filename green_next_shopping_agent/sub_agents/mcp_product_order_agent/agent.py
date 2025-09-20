@@ -5,13 +5,16 @@ from mcp import StdioServerParameters
 from pathlib import Path
 import logging
 from green_next_shopping_agent.constants import GEMINI_MODEL
+from google.adk.tools.tool_context import ToolContext
+from typing import Dict, Any
+import re
+
 logger = logging.getLogger(__name__)
 
 # IMPORTANT: Dynamically compute the absolute path to your server.py script
 PATH_TO_MCP_SERVER_SCRIPT = str((Path(__file__).parent.parent.absolute() / "mcp_server" / "mcp_server.py").resolve())
 
 logger.info(PATH_TO_MCP_SERVER_SCRIPT)
-
 
 mcp_product_order_agent=LlmAgent(
     name="mcp_product_order_agent",
@@ -73,7 +76,7 @@ mcp_product_order_agent=LlmAgent(
             If invalid → “Hmm, that looks short — can you type your full street address so the courier doesn’t get lost?”
         - city
             “Which city does your throne sit in?”
-            If numeric or empty → “Cities usually have letters — try again, royal one.”
+            If numeric or empty → “Cities usually have letters — try again.”
         - state
             “State / region (where you rule):”
         - country
@@ -83,17 +86,13 @@ mcp_product_order_agent=LlmAgent(
             Validation: country-dependent pattern; otherwise 3–12 alphanumeric chars.
             If invalid → “That doesn’t look like a valid postal code. Can you double-check?
         - credit card number **MAndetory** Tell the user that their details is safe with US
-            “What’s the number on your credit card?(16 Digit Number Mandetory)”
-            Validation: 16 digits, no spaces
-        - credit card cvv
-            “What’s the 3-digit code on your credit card?”
-        - credit card expiration year
-            “What’s the expiration year on your credit card?”
-            Validation: 4 digits, no spaces **Mandetory**
-        - credit card expiration month  
-            “What’s the expiration month on your credit card?”
-            Validation: 2 digits, no spaces **Mandetory**
-        
+            Ask the user to provide the credit card details in the following format:
+            4111111111111111 (16 digits)(**Mandetory**)
+            123 (3 digits CVV)(**Mandetory**)
+            2030 (4 digits Expiry Year)(**Mandetory**)
+            12 (2 digits Expiry Month)(**Mandetory**)
+         **Mandatory ask the user if any of the above details are missing.
+
         and then call place_order with the following payload format:
         
         {

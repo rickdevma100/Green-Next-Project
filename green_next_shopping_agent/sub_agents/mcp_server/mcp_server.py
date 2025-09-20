@@ -14,15 +14,21 @@ from grpc_clients import (
 )
 
 # Service endpoints - use environment variables for containerized deployment
-PRODUCT_CATALOG_SERVICE = os.getenv("PRODUCT_CATALOG_SERVICE", "localhost:3550")
-CART_SERVICE = os.getenv("CART_SERVICE", "localhost:7070") 
-CHECKOUT_SERVICE = os.getenv("CHECKOUT_SERVICE", "localhost:5050")
+PRODUCT_CATALOG_SERVICE = os.getenv("PRODUCT_CATALOG_SERVICE", "productcatalogservice:3550")
+CART_SERVICE = os.getenv("CART_SERVICE", "cartservice:7070") 
+CHECKOUT_SERVICE = os.getenv("CHECKOUT_SERVICE", "checkoutservice:5050")
+
+# Debug: Log the actual values being used
+logger.info(f"PRODUCT_CATALOG_SERVICE: {PRODUCT_CATALOG_SERVICE}")
+logger.info(f"CART_SERVICE: {CART_SERVICE}")
+logger.info(f"CHECKOUT_SERVICE: {CHECKOUT_SERVICE}")
 
 # Create server
 mcp = FastMCP("FastMCP Server for Green Next Shopping")
-ip_address = "http://34.45.131.68/"
+ip_address = os.getenv("IP_ADDRESS", "http://35.231.227.162/")
 @mcp.tool()
 def search_products(product_name: str) -> dict[str, Any]:
+    logger.info(f"search_products called with target: {PRODUCT_CATALOG_SERVICE}")
     client = ProductCatalogClient(target=PRODUCT_CATALOG_SERVICE)
     try:
         resp = client.search_products(product_name)

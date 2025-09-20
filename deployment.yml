@@ -26,15 +26,17 @@ spec:
         env:
         # Microservice endpoints
         - name: PRODUCT_CATALOG_SERVICE
-          value: "productcatalogservice.default.svc.cluster.local:3550"
+          value: "productcatalogservice:3550"
         - name: CART_SERVICE
-          value: "cartservice.default.svc.cluster.local:7070"
+          value: "cartservice:7070"
         - name: CHECKOUT_SERVICE
-          value: "checkoutservice.default.svc.cluster.local:5050"
+          value: "checkoutservice:5050"
         - name: PAYMENT_SERVICE
-          value: "paymentservice.default.svc.cluster.local:50051"
+          value: "paymentservice:50051"
         - name: FRONTEND_SERVICE
           value: "frontend.default.svc.cluster.local:80"
+        - name: IP_ADDRESS
+          value: "http://35.231.227.162/"
         - name: ADK_WEB_HOST
           value: "0.0.0.0"
         - name: ADK_WEB_PORT
@@ -57,11 +59,11 @@ spec:
           value: "asyncio"
         resources:
           requests:
-            memory: "512Mi"
-            cpu: "200m"
-          limits:
             memory: "1Gi"
-            cpu: "400m"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
         livenessProbe:
           tcpSocket:
             port: 8080
