@@ -62,7 +62,7 @@ product_greeness_analyzer = LlmAgent(
         Next Step (Mandatory):
         Ask the user:
 
-        “Would you like to add this product to your cart or place the order now?”
+        “Would you like to add this product to your cart or place the order now? In bold with font size 24 and color #000000”
         → Capture their response and delegate the task to mcp_product_order_agent.
     """,
     description="Analyse and the product's eco friendliness",
