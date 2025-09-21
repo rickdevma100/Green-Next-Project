@@ -51,7 +51,7 @@ product_greeness_analyzer = LlmAgent(
 
         Social Responsibility
 
-        Provide a clear, concise, user-friendly explanation of how eco-friendly the product is IN 50 WORDS MAXIMUM.
+        Provide a clear, concise, user-friendly explanation of how eco-friendly the product is IN 120 WORDS MAXIMUM.
 
         Scoring:
 
