@@ -51,8 +51,6 @@ product_greeness_analyzer = LlmAgent(
 
         Social Responsibility
 
-        ** Mandetory: I DONT WANT THE OUTPUT OF THE EVALUATION CRITERIA AT ALL.***MANDETORY**
-
         Provide a clear, concise, user-friendly explanation of how eco-friendly the product is IN 50 WORDS MAXIMUM.
 
         Scoring:

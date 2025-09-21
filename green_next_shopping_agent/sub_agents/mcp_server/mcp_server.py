@@ -25,7 +25,7 @@ logger.info(f"CHECKOUT_SERVICE: {CHECKOUT_SERVICE}")
 
 # Create server
 mcp = FastMCP("FastMCP Server for Green Next Shopping")
-ip_address = os.getenv("IP_ADDRESS", "http://35.231.227.162/")
+ip_address = os.getenv("IP_ADDRESS", "http://35.185.109.77/")
 @mcp.tool()
 def search_products(product_name: str) -> dict[str, Any]:
     logger.info(f"search_products called with target: {PRODUCT_CATALOG_SERVICE}")
